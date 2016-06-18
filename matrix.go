@@ -497,6 +497,7 @@ func (m *Matrix) clip(newMat [][]float64, y int, start, end float64, wg *sync.Wa
 	wg.Done()
 }
 
+// Clip clips matrix.
 func (m *Matrix) Clip(start, end float64) *Matrix {
 	newMat := make([][]float64, m.Rows)
 	var wg sync.WaitGroup
