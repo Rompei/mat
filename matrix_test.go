@@ -383,3 +383,24 @@ func TestReshape(t *testing.T) {
 		t.Errorf("Not same.")
 	}
 }
+
+func TestClip(t *testing.T) {
+	m := NewMatrix([][]float64{
+		{-1, 0, 123, -123},
+		{32, 0, 0.1, 0.2},
+		{2, 0, -0.3, 0.003},
+	})
+
+	ans := NewMatrix([][]float64{
+		{0.0, 0.0, 1.0, 0.0},
+		{1.0, 0.0, 0.1, 0.2},
+		{1.0, 0.0, 0.0, 0.003},
+	})
+
+	res := m.Clip(0, 1)
+	if !res.Equals(ans) {
+		t.Error("Not same.")
+		ans.Show()
+		res.Show()
+	}
+}

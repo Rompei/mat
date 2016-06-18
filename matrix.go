@@ -482,6 +482,32 @@ func (m *Matrix) T() *Matrix {
 	return NewMatrix(newMat)
 }
 
+func (m *Matrix) clip(newMat [][]float64, y int, start, end float64, wg *sync.WaitGroup) {
+	newMat[y] = make([]float64, m.Cols)
+	for x := 0; x < int(m.Cols); x++ {
+		e := m.M[y][x]
+		if e < start {
+			newMat[y][x] = start
+		} else if e > end {
+			newMat[y][x] = end
+		} else {
+			newMat[y][x] = e
+		}
+	}
+	wg.Done()
+}
+
+func (m *Matrix) Clip(start, end float64) *Matrix {
+	newMat := make([][]float64, m.Rows)
+	var wg sync.WaitGroup
+	for y := 0; y < int(m.Rows); y++ {
+		wg.Add(1)
+		go m.clip(newMat, y, start, end, &wg)
+	}
+	wg.Wait()
+	return NewMatrix(newMat)
+}
+
 // SumVec calculates sum of the vector.
 func SumVec(v []float64) float64 {
 	sum := 0.0
