@@ -526,3 +526,52 @@ func TestClip(t *testing.T) {
 		res.Show()
 	}
 }
+
+func TestIm2Col(t *testing.T) {
+	m := NewMatrix([][]float64{
+		{-1, -1, -1},
+		{1, 0, 0},
+		{0, 0, 1},
+	})
+	res := m.Im2Col(3, 1)
+	a := NewMatrix([][]float64{
+		{-1, -1, -1, 1, 0, 0, 0, 0, 1},
+	})
+
+	if !res.Equals(a) {
+		t.Error("not same")
+		a.Show()
+		res.Show()
+	}
+}
+
+func TestIm2ColWithStride(t *testing.T) {
+	m := NewMatrix([][]float64{
+		{0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 2, 0, 0, 1, 0},
+		{0, 1, 2, 0, 0, 1, 0},
+		{0, 2, 2, 1, 2, 2, 0},
+		{0, 0, 0, 1, 2, 1, 0},
+		{0, 2, 1, 1, 1, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0},
+	})
+	res := m.Im2Col(3, 2)
+
+	a := NewMatrix([][]float64{
+		{0, 0, 0, 0, 0, 2, 0, 1, 2},
+		{0, 0, 0, 2, 0, 0, 2, 0, 0},
+		{0, 0, 0, 0, 1, 0, 0, 1, 0},
+		{0, 1, 2, 0, 2, 2, 0, 0, 0},
+		{2, 0, 0, 2, 1, 2, 0, 1, 2},
+		{0, 1, 0, 2, 2, 0, 2, 1, 0},
+		{0, 0, 0, 0, 2, 1, 0, 0, 0},
+		{0, 1, 2, 1, 1, 1, 0, 0, 0},
+		{2, 1, 0, 1, 0, 0, 0, 0, 0},
+	})
+
+	if !res.Equals(a) {
+		t.Error("not same")
+		res.Show()
+		a.Show()
+	}
+}

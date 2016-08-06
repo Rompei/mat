@@ -596,3 +596,27 @@ func SumVec(v []float64) float64 {
 	}
 	return sum
 }
+
+func makeCol(m [][]float64, colSize, rs, re, cs, ce uint) []float64 {
+	col := make([]float64, colSize)
+	idx := 0
+	for y := rs; y < re; y++ {
+		for x := cs; x < ce; x++ {
+			col[idx] = m[y][x]
+			idx++
+		}
+	}
+	return col
+}
+
+// Im2Col make clumns matrix from matrix.
+func (m *Matrix) Im2Col(kernelSize, stride uint) *Matrix {
+	colSize := kernelSize * kernelSize
+	var res [][]float64
+	for y := 0; y < int(m.Rows-kernelSize+1); y += int(stride) {
+		for x := 0; x < int(m.Cols-kernelSize+1); x += int(stride) {
+			res = append(res, makeCol(m.M, colSize, uint(y), uint(y)+kernelSize, uint(x), uint(x)+kernelSize))
+		}
+	}
+	return NewMatrix(res)
+}
