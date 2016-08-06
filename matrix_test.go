@@ -100,6 +100,88 @@ func TestMul(t *testing.T) {
 	}
 }
 
+func TestElemAdd(t *testing.T) {
+	m1 := NewMatrix(s1)
+	m2 := NewMatrix(s2)
+	ans := NewMatrix([][]float64{
+		{12, 23},
+		{34, 45},
+	})
+
+	res, err := ElemAdd(m1, m2)
+	if err != nil {
+		t.Error(err)
+	}
+	if !res.Equals(ans) {
+		t.Error("not same")
+		ans.Show()
+		res.Show()
+	}
+}
+
+func TestElemSub(t *testing.T) {
+	m1 := NewMatrix(s1)
+	m2 := NewMatrix(s2)
+	ans := NewMatrix([][]float64{
+		{-8.000000, -17.000000},
+		{-26.000000, -35.000000},
+	})
+
+	res, err := ElemSub(m1, m2)
+	if err != nil {
+		t.Error(err)
+	}
+	if !res.Equals(ans) {
+		t.Error("not same")
+		ans.Show()
+		res.Show()
+	}
+}
+
+func TestElemMul(t *testing.T) {
+	m1 := NewMatrix(s1)
+	m2 := NewMatrix(s2)
+	ans := NewMatrix([][]float64{
+		{20, 60},
+		{120, 200},
+	})
+
+	res, err := ElemMul(m1, m2)
+	if err != nil {
+		t.Error(err)
+	}
+	if !res.Equals(ans) {
+		t.Error("not same")
+		ans.Show()
+		res.Show()
+	}
+}
+
+func TestElemDiv(t *testing.T) {
+	m1 := NewMatrix([][]float64{
+		{10, 20},
+		{40, 60},
+	})
+	m2 := NewMatrix([][]float64{
+		{2, 4},
+		{4, 6},
+	})
+	ans := NewMatrix([][]float64{
+		{5, 5},
+		{10, 10},
+	})
+
+	res, err := ElemDiv(m1, m2)
+	if err != nil {
+		t.Error(err)
+	}
+	if !res.Equals(ans) {
+		t.Error("not same")
+		ans.Show()
+		res.Show()
+	}
+}
+
 func TestBroadcastFunc(t *testing.T) {
 	m := NewMatrix([][]float64{
 		{1, 1, 1},
@@ -243,7 +325,7 @@ func TestConvolve2d(t *testing.T) {
 		{2, 4, 3},
 		{2, 3, 4},
 	})
-	res, err := m.Convolve2d(f)
+	res, err := m.Convolve2d(f, 1, 0, Max)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -253,6 +335,46 @@ func TestConvolve2d(t *testing.T) {
 		ans.Show()
 		res.Show()
 	}
+}
+
+func TestConvolve2dStride(t *testing.T) {
+	m := NewMatrix([][]float64{
+		{0, 2, 0, 0, 1},
+		{1, 2, 0, 0, 1},
+		{2, 2, 1, 2, 2},
+		{0, 0, 1, 2, 1},
+		{2, 1, 1, 1, 0},
+	})
+	f1 := NewMatrix([][]float64{
+		{-1, -1, -1},
+		{1, 0, 0},
+		{0, 0, 1},
+	})
+	f2 := NewMatrix([][]float64{
+		{0, 0, 1},
+		{1, 1, 0},
+		{1, 0, 0},
+	})
+	a := NewMatrix([][]float64{
+		{2, 5, 4},
+		{-2, 7, 4},
+		{3, 1, -3},
+	})
+	m, err := m.Convolve2d(f1, 2, 1, Max)
+	if err != nil {
+		t.Error(err)
+	}
+
+	m, err = m.Convolve2d(f2, 2, 0, Max)
+	if err != nil {
+		t.Error(err)
+	}
+	if same := m.Equals(a); !same {
+		t.Error("not same")
+		a.Show()
+		m.Show()
+	}
+
 }
 
 func TestPooling(t *testing.T) {
@@ -402,5 +524,54 @@ func TestClip(t *testing.T) {
 		t.Error("Not same.")
 		ans.Show()
 		res.Show()
+	}
+}
+
+func TestIm2Col(t *testing.T) {
+	m := NewMatrix([][]float64{
+		{-1, -1, -1},
+		{1, 0, 0},
+		{0, 0, 1},
+	})
+	res := m.Im2Col(3, 1)
+	a := NewMatrix([][]float64{
+		{-1, -1, -1, 1, 0, 0, 0, 0, 1},
+	})
+
+	if !res.Equals(a) {
+		t.Error("not same")
+		a.Show()
+		res.Show()
+	}
+}
+
+func TestIm2ColWithStride(t *testing.T) {
+	m := NewMatrix([][]float64{
+		{0, 0, 0, 0, 0, 0, 0},
+		{0, 0, 2, 0, 0, 1, 0},
+		{0, 1, 2, 0, 0, 1, 0},
+		{0, 2, 2, 1, 2, 2, 0},
+		{0, 0, 0, 1, 2, 1, 0},
+		{0, 2, 1, 1, 1, 0, 0},
+		{0, 0, 0, 0, 0, 0, 0},
+	})
+	res := m.Im2Col(3, 2)
+
+	a := NewMatrix([][]float64{
+		{0, 0, 0, 0, 0, 2, 0, 1, 2},
+		{0, 0, 0, 2, 0, 0, 2, 0, 0},
+		{0, 0, 0, 0, 1, 0, 0, 1, 0},
+		{0, 1, 2, 0, 2, 2, 0, 0, 0},
+		{2, 0, 0, 2, 1, 2, 0, 1, 2},
+		{0, 1, 0, 2, 2, 0, 2, 1, 0},
+		{0, 0, 0, 0, 2, 1, 0, 0, 0},
+		{0, 1, 2, 1, 1, 1, 0, 0, 0},
+		{2, 1, 0, 1, 0, 0, 0, 0, 0},
+	})
+
+	if !res.Equals(a) {
+		t.Error("not same")
+		res.Show()
+		a.Show()
 	}
 }

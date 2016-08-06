@@ -219,6 +219,82 @@ func Mul(a, b *Matrix) (*Matrix, error) {
 	return NewMatrix(res), nil
 }
 
+func execElem(newMat [][]float64, y int, a, b *Matrix, wg *sync.WaitGroup, f func(a, b float64) float64) {
+	newMat[y] = make([]float64, a.Cols)
+	for x := 0; x < int(a.Cols); x++ {
+		newMat[y][x] = f(a.M[y][x], b.M[y][x])
+	}
+	wg.Done()
+}
+
+// ElemAdd adds matrix elementwise.
+func ElemAdd(a, b *Matrix) (*Matrix, error) {
+	if a.Rows != b.Rows || a.Cols != b.Cols {
+		return nil, errors.New("Size was wrong")
+	}
+	res := make([][]float64, a.Cols)
+	var wg sync.WaitGroup
+	for y := 0; y < int(a.Rows); y++ {
+		wg.Add(1)
+		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+			return a + b
+		})
+	}
+	wg.Wait()
+	return NewMatrix(res), nil
+}
+
+// ElemSub substitutes matrix elementwise.
+func ElemSub(a, b *Matrix) (*Matrix, error) {
+	if a.Rows != b.Rows || a.Cols != b.Cols {
+		return nil, errors.New("Size was wrong")
+	}
+	res := make([][]float64, a.Cols)
+	var wg sync.WaitGroup
+	for y := 0; y < int(a.Rows); y++ {
+		wg.Add(1)
+		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+			return a - b
+		})
+	}
+	wg.Wait()
+	return NewMatrix(res), nil
+}
+
+// ElemMul multiples matrix elementwise.
+func ElemMul(a, b *Matrix) (*Matrix, error) {
+	if a.Rows != b.Rows || a.Cols != b.Cols {
+		return nil, errors.New("Size was wrong")
+	}
+	res := make([][]float64, a.Cols)
+	var wg sync.WaitGroup
+	for y := 0; y < int(a.Rows); y++ {
+		wg.Add(1)
+		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+			return a * b
+		})
+	}
+	wg.Wait()
+	return NewMatrix(res), nil
+}
+
+// ElemDiv divides matrix elementwise.
+func ElemDiv(a, b *Matrix) (*Matrix, error) {
+	if a.Rows != b.Rows || a.Cols != b.Cols {
+		return nil, errors.New("Size was wrong")
+	}
+	res := make([][]float64, a.Cols)
+	var wg sync.WaitGroup
+	for y := 0; y < int(a.Rows); y++ {
+		wg.Add(1)
+		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+			return a / b
+		})
+	}
+	wg.Wait()
+	return NewMatrix(res), nil
+}
+
 func (m *Matrix) flatten(res []float64, y int, wg *sync.WaitGroup) {
 	for x := 0; x < int(m.Cols); x++ {
 		res[y*int(m.Cols)+x] = m.M[y][x]
@@ -380,11 +456,11 @@ func Slice2d(s [][]float64, rs, re, cs, ce uint) [][]float64 {
 	return sr
 }
 
-func (m *Matrix) execConv(newMat [][]float64, f *Matrix, y int, cols, rows uint, errCh chan error) {
+func (m *Matrix) execConv(newMat [][]float64, f *Matrix, y int, cols, rows, stride uint, errCh chan error) {
 	newMat[y] = make([]float64, cols)
 	var err error
 	for x := 0; x < int(cols); x++ {
-		newMat[y][x], err = Dot2d(Slice2d(m.M, uint(y), uint(y)+f.Rows, uint(x), uint(x)+f.Cols), f.M)
+		newMat[y][x], err = Dot2d(Slice2d(m.M, uint(y)*stride, uint(y)*stride+f.Rows, uint(x)*stride, uint(x)*stride+f.Cols), f.M)
 		if err != nil {
 			errCh <- err
 		}
@@ -393,13 +469,16 @@ func (m *Matrix) execConv(newMat [][]float64, f *Matrix, y int, cols, rows uint,
 }
 
 // Convolve2d convolve a 2d matrix.
-func (m *Matrix) Convolve2d(f *Matrix) (*Matrix, error) {
-	rows := m.Rows - 2*(uint(f.Rows/2))
-	cols := m.Cols - 2*(uint(f.Cols/2))
+func (m *Matrix) Convolve2d(f *Matrix, stride, pad uint, mode PadMode) (*Matrix, error) {
+	rows := (m.Rows-f.Rows+2*pad)/stride + 1
+	cols := (m.Cols-f.Rows+2*pad)/stride + 1
+	if pad > 0 {
+		m = m.Pad(pad, mode)
+	}
 	newMat := make([][]float64, rows)
 	errCh := make(chan error, cols)
 	for y := 0; y < int(rows); y++ {
-		go m.execConv(newMat, f, y, cols, rows, errCh)
+		go m.execConv(newMat, f, y, cols, rows, stride, errCh)
 	}
 
 	for i := 0; i < int(rows); i++ {
@@ -516,4 +595,28 @@ func SumVec(v []float64) float64 {
 		sum += e
 	}
 	return sum
+}
+
+func makeCol(m [][]float64, colSize, rs, re, cs, ce uint) []float64 {
+	col := make([]float64, colSize)
+	idx := 0
+	for y := rs; y < re; y++ {
+		for x := cs; x < ce; x++ {
+			col[idx] = m[y][x]
+			idx++
+		}
+	}
+	return col
+}
+
+// Im2Col make clumns matrix from matrix.
+func (m *Matrix) Im2Col(kernelSize, stride uint) *Matrix {
+	colSize := kernelSize * kernelSize
+	var res [][]float64
+	for y := 0; y < int(m.Rows-kernelSize+1); y += int(stride) {
+		for x := 0; x < int(m.Cols-kernelSize+1); x += int(stride) {
+			res = append(res, makeCol(m.M, colSize, uint(y), uint(y)+kernelSize, uint(x), uint(x)+kernelSize))
+		}
+	}
+	return NewMatrix(res)
 }
