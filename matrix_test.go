@@ -7,36 +7,36 @@ import (
 	"time"
 )
 
-var s1 = [][]float64{
-	[]float64{2, 3},
-	[]float64{4, 5},
+var s1 = [][]float32{
+	[]float32{2, 3},
+	[]float32{4, 5},
 }
 
-var s2 = [][]float64{
-	[]float64{10, 20},
-	[]float64{30, 40},
+var s2 = [][]float32{
+	[]float32{10, 20},
+	[]float32{30, 40},
 }
 
-var s3 = [][]float64{
-	[]float64{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
-	[]float64{11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
-	[]float64{21, 22, 23, 24, 25, 26, 27, 28, 29, 30},
-	[]float64{41, 42, 43, 44, 45, 46, 47, 48, 49, 50},
+var s3 = [][]float32{
+	[]float32{1, 2, 3, 4, 5, 6, 7, 8, 9, 10},
+	[]float32{11, 12, 13, 14, 15, 16, 17, 18, 19, 20},
+	[]float32{21, 22, 23, 24, 25, 26, 27, 28, 29, 30},
+	[]float32{41, 42, 43, 44, 45, 46, 47, 48, 49, 50},
 }
 
-var one = NewMatrix([][]float64{
-	[]float64{1, 1, 1},
-	[]float64{1, 1, 1},
-	[]float64{1, 1, 1},
+var one = NewMatrix([][]float32{
+	[]float32{1, 1, 1},
+	[]float32{1, 1, 1},
+	[]float32{1, 1, 1},
 })
 
 func GetMatrix(rows, cols int) *Matrix {
 	rand.Seed(time.Now().UnixNano())
-	s := make([][]float64, rows)
+	s := make([][]float32, rows)
 	for y := 0; y < rows; y++ {
-		col := make([]float64, cols)
+		col := make([]float32, cols)
 		for x := 0; x < cols; x++ {
-			col[x] = rand.Float64()
+			col[x] = rand.Float32()
 		}
 		s[y] = col
 	}
@@ -44,17 +44,17 @@ func GetMatrix(rows, cols int) *Matrix {
 }
 
 func TestNewMatrix(t *testing.T) {
-	NewMatrix([][]float64{
+	NewMatrix([][]float32{
 		{1},
 		{1},
 		{1},
 		{1},
 		{1},
 	})
-	NewMatrix([][]float64{
+	NewMatrix([][]float32{
 		{1, 1, 1, 1, 1},
 	})
-	NewMatrix([][]float64{
+	NewMatrix([][]float32{
 		{1, 1, 1, 1},
 		{1, 1, 1, 1},
 		{1, 1, 1, 1},
@@ -103,7 +103,7 @@ func TestMul(t *testing.T) {
 func TestElemAdd(t *testing.T) {
 	m1 := NewMatrix(s1)
 	m2 := NewMatrix(s2)
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{12, 23},
 		{34, 45},
 	})
@@ -122,7 +122,7 @@ func TestElemAdd(t *testing.T) {
 func TestElemSub(t *testing.T) {
 	m1 := NewMatrix(s1)
 	m2 := NewMatrix(s2)
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{-8.000000, -17.000000},
 		{-26.000000, -35.000000},
 	})
@@ -141,7 +141,7 @@ func TestElemSub(t *testing.T) {
 func TestElemMul(t *testing.T) {
 	m1 := NewMatrix(s1)
 	m2 := NewMatrix(s2)
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{20, 60},
 		{120, 200},
 	})
@@ -158,15 +158,15 @@ func TestElemMul(t *testing.T) {
 }
 
 func TestElemDiv(t *testing.T) {
-	m1 := NewMatrix([][]float64{
+	m1 := NewMatrix([][]float32{
 		{10, 20},
 		{40, 60},
 	})
-	m2 := NewMatrix([][]float64{
+	m2 := NewMatrix([][]float32{
 		{2, 4},
 		{4, 6},
 	})
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{5, 5},
 		{10, 10},
 	})
@@ -183,19 +183,19 @@ func TestElemDiv(t *testing.T) {
 }
 
 func TestBroadcastFunc(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{1, 1, 1},
 		{1, 1, 1},
 		{1, 1, 1},
 	})
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{2, 2, 2},
 		{2, 2, 2},
 		{2, 2, 2},
 	})
-	addOne := m.BroadcastFunc(func(e float64, a ...interface{}) float64 {
-		return e + a[0].(float64)
-	}, 1.0)
+	addOne := m.BroadcastFunc(func(e float32, a ...interface{}) float32 {
+		return e + a[0].(float32)
+	}, float32(1.0))
 
 	if !addOne.Equals(ans) {
 		t.Error("Not Same")
@@ -207,17 +207,17 @@ func TestBroadcastFunc(t *testing.T) {
 func BenchmarkBroadcastFunc(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		m := GetMatrix(480, 360)
-		m.BroadcastFunc(func(e float64, a ...interface{}) float64 {
-			return e + a[0].(float64)
-		}, 10.0)
+		m.BroadcastFunc(func(e float32, a ...interface{}) float32 {
+			return e + a[0].(float32)
+		}, float32(10.0))
 	}
 }
 
 func TestBroadcastAdd(t *testing.T) {
-	ans := NewMatrix([][]float64{
-		[]float64{2, 2, 2},
-		[]float64{2, 2, 2},
-		[]float64{2, 2, 2},
+	ans := NewMatrix([][]float32{
+		[]float32{2, 2, 2},
+		[]float32{2, 2, 2},
+		[]float32{2, 2, 2},
 	})
 	res := one.BroadcastAdd(1)
 	if !ans.Equals(res) {
@@ -227,10 +227,10 @@ func TestBroadcastAdd(t *testing.T) {
 }
 
 func TestBroadcastSub(t *testing.T) {
-	ans := NewMatrix([][]float64{
-		[]float64{0, 0, 0},
-		[]float64{0, 0, 0},
-		[]float64{0, 0, 0},
+	ans := NewMatrix([][]float32{
+		[]float32{0, 0, 0},
+		[]float32{0, 0, 0},
+		[]float32{0, 0, 0},
 	})
 	res := one.BroadcastSub(1)
 	if !ans.Equals(res) {
@@ -240,10 +240,10 @@ func TestBroadcastSub(t *testing.T) {
 }
 
 func TestBroadcastMul(t *testing.T) {
-	ans := NewMatrix([][]float64{
-		[]float64{2, 2, 2},
-		[]float64{2, 2, 2},
-		[]float64{2, 2, 2},
+	ans := NewMatrix([][]float32{
+		[]float32{2, 2, 2},
+		[]float32{2, 2, 2},
+		[]float32{2, 2, 2},
 	})
 	res := one.BroadcastMul(2)
 	if !ans.Equals(res) {
@@ -253,10 +253,10 @@ func TestBroadcastMul(t *testing.T) {
 }
 
 func TestBoradcastDiv(t *testing.T) {
-	ans := NewMatrix([][]float64{
-		[]float64{1, 1, 1},
-		[]float64{1, 1, 1},
-		[]float64{1, 1, 1},
+	ans := NewMatrix([][]float32{
+		[]float32{1, 1, 1},
+		[]float32{1, 1, 1},
+		[]float32{1, 1, 1},
 	})
 	res := one.BroadcastDiv(1)
 	if !ans.Equals(res) {
@@ -286,14 +286,14 @@ func BenchmarkEdge(b *testing.B) {
 }
 
 func TestSlice2d(t *testing.T) {
-	m := [][]float64{
+	m := [][]float32{
 		{1, 1, 1, 0, 0},
 		{0, 1, 1, 1, 0},
 		{0, 0, 1, 1, 1},
 		{0, 0, 1, 1, 0},
 		{0, 1, 1, 0, 0},
 	}
-	ans := [][]float64{
+	ans := [][]float32{
 		{1, 1, 1},
 		{0, 1, 1},
 		{0, 0, 1},
@@ -308,19 +308,19 @@ func TestSlice2d(t *testing.T) {
 }
 
 func TestConvolve2d(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{1, 1, 1, 0, 0},
 		{0, 1, 1, 1, 0},
 		{0, 0, 1, 1, 1},
 		{0, 0, 1, 1, 0},
 		{0, 1, 1, 0, 0},
 	})
-	f := NewMatrix([][]float64{
+	f := NewMatrix([][]float32{
 		{1, 0, 1},
 		{0, 1, 0},
 		{1, 0, 1},
 	})
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{4, 3, 4},
 		{2, 4, 3},
 		{2, 3, 4},
@@ -338,24 +338,24 @@ func TestConvolve2d(t *testing.T) {
 }
 
 func TestConvolve2dStride(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{0, 2, 0, 0, 1},
 		{1, 2, 0, 0, 1},
 		{2, 2, 1, 2, 2},
 		{0, 0, 1, 2, 1},
 		{2, 1, 1, 1, 0},
 	})
-	f1 := NewMatrix([][]float64{
+	f1 := NewMatrix([][]float32{
 		{-1, -1, -1},
 		{1, 0, 0},
 		{0, 0, 1},
 	})
-	f2 := NewMatrix([][]float64{
+	f2 := NewMatrix([][]float32{
 		{0, 0, 1},
 		{1, 1, 0},
 		{1, 0, 0},
 	})
-	a := NewMatrix([][]float64{
+	a := NewMatrix([][]float32{
 		{2, 5, 4},
 		{-2, 7, 4},
 		{3, 1, -3},
@@ -378,18 +378,18 @@ func TestConvolve2dStride(t *testing.T) {
 }
 
 func TestPooling(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{12, 20, 30, 0},
 		{8, 12, 2, 0},
 		{34, 70, 37, 4},
 		{112, 100, 25, 12},
 	})
-	ans1 := NewMatrix([][]float64{
+	ans1 := NewMatrix([][]float32{
 		{20, 30},
 		{112, 37},
 	})
 
-	ans2 := NewMatrix([][]float64{
+	ans2 := NewMatrix([][]float32{
 		{13, 8},
 		{79, 19.5},
 	})
@@ -414,12 +414,12 @@ func TestPooling(t *testing.T) {
 }
 
 func TestT(t *testing.T) {
-	m1 := NewMatrix([][]float64{
+	m1 := NewMatrix([][]float32{
 		{1, 2, 3},
 		{4, 5, 6},
 		{7, 8, 9},
 	})
-	ans1 := NewMatrix([][]float64{
+	ans1 := NewMatrix([][]float32{
 		{1, 4, 7},
 		{2, 5, 8},
 		{3, 6, 9},
@@ -431,13 +431,13 @@ func TestT(t *testing.T) {
 		t.Error("Not same")
 	}
 
-	m2 := NewMatrix([][]float64{
+	m2 := NewMatrix([][]float32{
 		{1, 2},
 		{3, 4},
 		{5, 6},
 	})
 
-	ans2 := NewMatrix([][]float64{
+	ans2 := NewMatrix([][]float32{
 		{1, 3, 5},
 		{2, 4, 6},
 	})
@@ -450,13 +450,13 @@ func TestT(t *testing.T) {
 }
 
 func TestFlatten(t *testing.T) {
-	m1 := NewMatrix([][]float64{
+	m1 := NewMatrix([][]float32{
 		{1, 1, 1, 1},
 		{1, 1, 1, 1},
 		{1, 1, 1, 1},
 	})
 
-	ans1 := []float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+	ans1 := []float32{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
 
 	f1 := m1.Flatten()
 
@@ -466,13 +466,13 @@ func TestFlatten(t *testing.T) {
 		t.Log(f1)
 	}
 
-	m2 := NewMatrix([][]float64{
+	m2 := NewMatrix([][]float32{
 		{1, 1, 1, 1, 1, 1},
 		{1, 1, 1, 1, 1, 1},
 		{2, 2, 2, 2, 2, 2},
 	})
 
-	ans2 := []float64{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2}
+	ans2 := []float32{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2}
 
 	f2 := m2.Flatten()
 
@@ -484,14 +484,14 @@ func TestFlatten(t *testing.T) {
 }
 
 func TestReshape(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{0, 0, 0},
 		{0, 0, 0},
 		{0, 0, 0},
 		{0, 0, 0},
 	})
 
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{0, 0, 0, 0, 0, 0},
 		{0, 0, 0, 0, 0, 0},
 	})
@@ -507,13 +507,13 @@ func TestReshape(t *testing.T) {
 }
 
 func TestClip(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{-1, 0, 123, -123},
 		{32, 0, 0.1, 0.2},
 		{2, 0, -0.3, 0.003},
 	})
 
-	ans := NewMatrix([][]float64{
+	ans := NewMatrix([][]float32{
 		{0.0, 0.0, 1.0, 0.0},
 		{1.0, 0.0, 0.1, 0.2},
 		{1.0, 0.0, 0.0, 0.003},
@@ -528,13 +528,13 @@ func TestClip(t *testing.T) {
 }
 
 func TestIm2Col(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{-1, -1, -1},
 		{1, 0, 0},
 		{0, 0, 1},
 	})
 	res := m.Im2Col(3, 1)
-	a := NewMatrix([][]float64{
+	a := NewMatrix([][]float32{
 		{-1, -1, -1, 1, 0, 0, 0, 0, 1},
 	})
 
@@ -546,7 +546,7 @@ func TestIm2Col(t *testing.T) {
 }
 
 func TestIm2ColWithStride(t *testing.T) {
-	m := NewMatrix([][]float64{
+	m := NewMatrix([][]float32{
 		{0, 0, 0, 0, 0, 0, 0},
 		{0, 0, 2, 0, 0, 1, 0},
 		{0, 1, 2, 0, 0, 1, 0},
@@ -557,7 +557,7 @@ func TestIm2ColWithStride(t *testing.T) {
 	})
 	res := m.Im2Col(3, 2)
 
-	a := NewMatrix([][]float64{
+	a := NewMatrix([][]float32{
 		{0, 0, 0, 0, 0, 2, 0, 1, 2},
 		{0, 0, 0, 2, 0, 0, 2, 0, 0},
 		{0, 0, 0, 0, 1, 0, 0, 1, 0},

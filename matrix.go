@@ -12,7 +12,7 @@ import (
 type Matrix struct {
 	Rows uint
 	Cols uint
-	M    [][]float64
+	M    [][]float32
 }
 
 // CalcMode is flag for calculation.
@@ -46,7 +46,7 @@ const (
 )
 
 // NewMatrix is constructor of Matrix.
-func NewMatrix(m [][]float64) *Matrix {
+func NewMatrix(m [][]float32) *Matrix {
 	return &Matrix{
 		M:    m,
 		Rows: uint(len(m)),
@@ -56,9 +56,9 @@ func NewMatrix(m [][]float64) *Matrix {
 
 // Zeros makes zero value matrix.
 func Zeros(r, c uint) *Matrix {
-	res := make([][]float64, r)
+	res := make([][]float32, r)
 	for y := 0; y < int(r); y++ {
-		res[y] = make([]float64, c)
+		res[y] = make([]float32, c)
 	}
 	return NewMatrix(res)
 }
@@ -66,11 +66,11 @@ func Zeros(r, c uint) *Matrix {
 // Random returns random matrix.
 func Random(r, c uint) *Matrix {
 	rand.Seed(time.Now().UnixNano())
-	res := make([][]float64, r)
+	res := make([][]float32, r)
 	for y := 0; y < int(r); y++ {
-		res[y] = make([]float64, c)
+		res[y] = make([]float32, c)
 		for x := 0; x < int(c); x++ {
-			res[y][x] = rand.Float64()
+			res[y][x] = rand.Float32()
 		}
 	}
 	return NewMatrix(res)
@@ -108,9 +108,9 @@ func (m *Matrix) Reshape(r, c uint) (*Matrix, error) {
 	}
 	row := 0
 	col := 0
-	newMat := make([][]float64, r)
+	newMat := make([][]float32, r)
 	for y := 0; y < int(r); y++ {
-		newMat[y] = make([]float64, c)
+		newMat[y] = make([]float32, c)
 		for x := 0; x < int(c); x++ {
 			if col > int(m.Cols)-1 {
 				row++
@@ -123,7 +123,7 @@ func (m *Matrix) Reshape(r, c uint) (*Matrix, error) {
 	return NewMatrix(newMat), nil
 }
 
-func cmp(a, b []float64, resCh chan bool) {
+func cmp(a, b []float32, resCh chan bool) {
 	for i := range a {
 		if a[i] != b[i] {
 			resCh <- false
@@ -149,8 +149,8 @@ func (m *Matrix) Equals(t *Matrix) bool {
 	return true
 }
 
-func execCalc(newMat [][]float64, y int, a, b *Matrix, mode CalcMode, wg *sync.WaitGroup) {
-	newMat[y] = make([]float64, a.Cols)
+func execCalc(newMat [][]float32, y int, a, b *Matrix, mode CalcMode, wg *sync.WaitGroup) {
+	newMat[y] = make([]float32, a.Cols)
 	for x := 0; x < int(a.Cols); x++ {
 		switch mode {
 		case AddOP:
@@ -167,7 +167,7 @@ func Add(a, b *Matrix) (*Matrix, error) {
 	if a.Cols != b.Cols || a.Rows != b.Rows {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float64, a.Rows)
+	res := make([][]float32, a.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
@@ -182,7 +182,7 @@ func Sub(a, b *Matrix) (*Matrix, error) {
 	if a.Cols != b.Cols || a.Rows != b.Rows {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float64, a.Rows)
+	res := make([][]float32, a.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
@@ -192,10 +192,10 @@ func Sub(a, b *Matrix) (*Matrix, error) {
 	return NewMatrix(res), nil
 }
 
-func execMul(newMat [][]float64, i int, a, b *Matrix, wg *sync.WaitGroup) {
-	newMat[i] = make([]float64, a.Cols)
+func execMul(newMat [][]float32, i int, a, b *Matrix, wg *sync.WaitGroup) {
+	newMat[i] = make([]float32, a.Cols)
 	for j := 0; j < int(b.Cols); j++ {
-		partial := 0.0
+		partial := float32(0.0)
 		for k := 0; k < int(b.Rows); k++ {
 			partial += a.M[i][k] * b.M[k][j]
 		}
@@ -209,7 +209,7 @@ func Mul(a, b *Matrix) (*Matrix, error) {
 	if a.Cols != b.Rows {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float64, a.Cols)
+	res := make([][]float32, a.Cols)
 	var wg sync.WaitGroup
 	for i := 0; i < int(a.Rows); i++ {
 		wg.Add(1)
@@ -219,8 +219,8 @@ func Mul(a, b *Matrix) (*Matrix, error) {
 	return NewMatrix(res), nil
 }
 
-func execElem(newMat [][]float64, y int, a, b *Matrix, wg *sync.WaitGroup, f func(a, b float64) float64) {
-	newMat[y] = make([]float64, a.Cols)
+func execElem(newMat [][]float32, y int, a, b *Matrix, wg *sync.WaitGroup, f func(a, b float32) float32) {
+	newMat[y] = make([]float32, a.Cols)
 	for x := 0; x < int(a.Cols); x++ {
 		newMat[y][x] = f(a.M[y][x], b.M[y][x])
 	}
@@ -232,11 +232,11 @@ func ElemAdd(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float64, a.Cols)
+	res := make([][]float32, a.Cols)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
-		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+		go execElem(res, y, a, b, &wg, func(a, b float32) float32 {
 			return a + b
 		})
 	}
@@ -249,11 +249,11 @@ func ElemSub(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float64, a.Cols)
+	res := make([][]float32, a.Cols)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
-		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+		go execElem(res, y, a, b, &wg, func(a, b float32) float32 {
 			return a - b
 		})
 	}
@@ -266,11 +266,11 @@ func ElemMul(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float64, a.Cols)
+	res := make([][]float32, a.Cols)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
-		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+		go execElem(res, y, a, b, &wg, func(a, b float32) float32 {
 			return a * b
 		})
 	}
@@ -283,11 +283,11 @@ func ElemDiv(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float64, a.Cols)
+	res := make([][]float32, a.Cols)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
-		go execElem(res, y, a, b, &wg, func(a, b float64) float64 {
+		go execElem(res, y, a, b, &wg, func(a, b float32) float32 {
 			return a / b
 		})
 	}
@@ -295,7 +295,7 @@ func ElemDiv(a, b *Matrix) (*Matrix, error) {
 	return NewMatrix(res), nil
 }
 
-func (m *Matrix) flatten(res []float64, y int, wg *sync.WaitGroup) {
+func (m *Matrix) flatten(res []float32, y int, wg *sync.WaitGroup) {
 	for x := 0; x < int(m.Cols); x++ {
 		res[y*int(m.Cols)+x] = m.M[y][x]
 	}
@@ -303,8 +303,8 @@ func (m *Matrix) flatten(res []float64, y int, wg *sync.WaitGroup) {
 }
 
 // Flatten make Matrix flat.
-func (m *Matrix) Flatten() []float64 {
-	res := make([]float64, m.Rows*m.Cols)
+func (m *Matrix) Flatten() []float32 {
+	res := make([]float32, m.Rows*m.Cols)
 	var wg sync.WaitGroup
 	for y := 0; y < int(m.Rows); y++ {
 		wg.Add(1)
@@ -314,8 +314,8 @@ func (m *Matrix) Flatten() []float64 {
 	return res
 }
 
-func (m *Matrix) execFunc(mat [][]float64, y int, wg *sync.WaitGroup, f func(float64, ...interface{}) float64, args ...interface{}) {
-	mat[y] = make([]float64, m.Cols)
+func (m *Matrix) execFunc(mat [][]float32, y int, wg *sync.WaitGroup, f func(float32, ...interface{}) float32, args ...interface{}) {
+	mat[y] = make([]float32, m.Cols)
 	for x := 0; x < int(m.Cols); x++ {
 		mat[y][x] = f(m.M[y][x], args...)
 	}
@@ -323,8 +323,8 @@ func (m *Matrix) execFunc(mat [][]float64, y int, wg *sync.WaitGroup, f func(flo
 }
 
 // BroadcastFunc executes function for bitwise.
-func (m *Matrix) BroadcastFunc(f func(float64, ...interface{}) float64, args ...interface{}) *Matrix {
-	newMatrix := make([][]float64, m.Rows)
+func (m *Matrix) BroadcastFunc(f func(float32, ...interface{}) float32, args ...interface{}) *Matrix {
+	newMatrix := make([][]float32, m.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(m.Rows); y++ {
 		wg.Add(1)
@@ -335,36 +335,36 @@ func (m *Matrix) BroadcastFunc(f func(float64, ...interface{}) float64, args ...
 }
 
 // BroadcastAdd adds matrix as bitwise.
-func (m *Matrix) BroadcastAdd(v float64) *Matrix {
-	return m.BroadcastFunc(func(e float64, a ...interface{}) float64 {
-		return e + a[0].(float64)
+func (m *Matrix) BroadcastAdd(v float32) *Matrix {
+	return m.BroadcastFunc(func(e float32, a ...interface{}) float32 {
+		return e + a[0].(float32)
 	}, v)
 }
 
 // BroadcastSub substitute matrix as bitwise.
-func (m *Matrix) BroadcastSub(v float64) *Matrix {
-	return m.BroadcastFunc(func(e float64, a ...interface{}) float64 {
-		return e - a[0].(float64)
+func (m *Matrix) BroadcastSub(v float32) *Matrix {
+	return m.BroadcastFunc(func(e float32, a ...interface{}) float32 {
+		return e - a[0].(float32)
 	}, v)
 }
 
 // BroadcastMul multiples matrix as bitwise.
-func (m *Matrix) BroadcastMul(v float64) *Matrix {
-	return m.BroadcastFunc(func(e float64, a ...interface{}) float64 {
-		return e * a[0].(float64)
+func (m *Matrix) BroadcastMul(v float32) *Matrix {
+	return m.BroadcastFunc(func(e float32, a ...interface{}) float32 {
+		return e * a[0].(float32)
 	}, v)
 }
 
 // BroadcastDiv divide matrix as bitwise.
-func (m *Matrix) BroadcastDiv(v float64) *Matrix {
-	return m.BroadcastFunc(func(e float64, a ...interface{}) float64 {
-		return e / a[0].(float64)
+func (m *Matrix) BroadcastDiv(v float32) *Matrix {
+	return m.BroadcastFunc(func(e float32, a ...interface{}) float32 {
+		return e / a[0].(float32)
 	}, v)
 }
 
-func (m *Matrix) zeroPad(rows, cols uint, newMatrix [][]float64, w uint, y int, wg *sync.WaitGroup) {
+func (m *Matrix) zeroPad(rows, cols uint, newMatrix [][]float32, w uint, y int, wg *sync.WaitGroup) {
 	newCols := m.Cols + w*2
-	newMatrix[y] = make([]float64, newCols)
+	newMatrix[y] = make([]float32, newCols)
 	for x := 0; x < int(newCols); x++ {
 		if y > int(w)-1 && y < int(rows+w) && x > int(w)-1 && x < int(cols+w) {
 			newMatrix[y][x] = m.M[y-int(w)][x-int(w)]
@@ -375,9 +375,9 @@ func (m *Matrix) zeroPad(rows, cols uint, newMatrix [][]float64, w uint, y int, 
 	wg.Done()
 }
 
-func (m *Matrix) edgePad(rows, cols uint, newMatrix [][]float64, w uint, y int, wg *sync.WaitGroup) {
+func (m *Matrix) edgePad(rows, cols uint, newMatrix [][]float32, w uint, y int, wg *sync.WaitGroup) {
 	newCols := m.Cols + w*2
-	newMatrix[y] = make([]float64, newCols)
+	newMatrix[y] = make([]float32, newCols)
 	for x := 0; x < int(newCols); x++ {
 		if y < int(w) && x < int(w) {
 			newMatrix[y][x] = m.M[0][0]
@@ -405,7 +405,7 @@ func (m *Matrix) edgePad(rows, cols uint, newMatrix [][]float64, w uint, y int, 
 // Pad pads the Matrix.
 func (m *Matrix) Pad(w uint, mode PadMode) *Matrix {
 	newRows := m.Rows + w*2
-	newMatrix := make([][]float64, newRows)
+	newMatrix := make([][]float32, newRows)
 	rows, cols := m.GetSize()
 	var wg sync.WaitGroup
 	for y := 0; y < int(newRows); y++ {
@@ -422,11 +422,11 @@ func (m *Matrix) Pad(w uint, mode PadMode) *Matrix {
 }
 
 // Dot calculate dot of two vector.
-func Dot(v1, v2 []float64) (float64, error) {
+func Dot(v1, v2 []float32) (float32, error) {
 	if len(v1) != len(v2) {
 		return 0.0, fmt.Errorf("Length mismatched %d, %d\n", len(v1), len(v2))
 	}
-	sum := 0.0
+	sum := float32(0.0)
 	for i := 0; i < len(v1); i++ {
 		sum += v1[i] * v2[i]
 	}
@@ -434,8 +434,8 @@ func Dot(v1, v2 []float64) (float64, error) {
 }
 
 // Dot2d calculate dot of a matrix.
-func Dot2d(m1, m2 [][]float64) (float64, error) {
-	sum := 0.0
+func Dot2d(m1, m2 [][]float32) (float32, error) {
+	sum := float32(0.0)
 	for i := 0; i < len(m1); i++ {
 		partial, err := Dot(m1[i], m2[i])
 		if err != nil {
@@ -447,8 +447,8 @@ func Dot2d(m1, m2 [][]float64) (float64, error) {
 }
 
 // Slice2d slices a matrix.
-func Slice2d(s [][]float64, rs, re, cs, ce uint) [][]float64 {
-	sr := make([][]float64, re-rs)
+func Slice2d(s [][]float32, rs, re, cs, ce uint) [][]float32 {
+	sr := make([][]float32, re-rs)
 	copy(sr, s[rs:re])
 	for y := 0; y < len(sr); y++ {
 		sr[y] = sr[y][cs:ce]
@@ -456,8 +456,8 @@ func Slice2d(s [][]float64, rs, re, cs, ce uint) [][]float64 {
 	return sr
 }
 
-func (m *Matrix) execConv(newMat [][]float64, f *Matrix, y int, cols, rows, stride uint, errCh chan error) {
-	newMat[y] = make([]float64, cols)
+func (m *Matrix) execConv(newMat [][]float32, f *Matrix, y int, cols, rows, stride uint, errCh chan error) {
+	newMat[y] = make([]float32, cols)
 	var err error
 	for x := 0; x < int(cols); x++ {
 		newMat[y][x], err = Dot2d(Slice2d(m.M, uint(y)*stride, uint(y)*stride+f.Rows, uint(x)*stride, uint(x)*stride+f.Cols), f.M)
@@ -475,7 +475,7 @@ func (m *Matrix) Convolve2d(f *Matrix, stride, pad uint, mode PadMode) (*Matrix,
 	if pad > 0 {
 		m = m.Pad(pad, mode)
 	}
-	newMat := make([][]float64, rows)
+	newMat := make([][]float32, rows)
 	errCh := make(chan error, cols)
 	for y := 0; y < int(rows); y++ {
 		go m.execConv(newMat, f, y, cols, rows, stride, errCh)
@@ -491,7 +491,7 @@ func (m *Matrix) Convolve2d(f *Matrix, stride, pad uint, mode PadMode) (*Matrix,
 	return NewMatrix(newMat), nil
 }
 
-func maxPool(m [][]float64) float64 {
+func maxPool(m [][]float32) float32 {
 	max := m[0][0]
 	for y := 0; y < len(m); y++ {
 		for x := 0; x < len(m[0]); x++ {
@@ -503,18 +503,18 @@ func maxPool(m [][]float64) float64 {
 	return max
 }
 
-func avgPool(m [][]float64) float64 {
-	sum := 0.0
+func avgPool(m [][]float32) float32 {
+	sum := float32(0.0)
 	for y := 0; y < len(m); y++ {
 		for x := 0; x < len(m[0]); x++ {
 			sum += m[y][x]
 		}
 	}
-	return sum / float64(len(m)*len(m[0]))
+	return sum / float32(len(m)*len(m[0]))
 }
 
-func (m *Matrix) execPool(newMat [][]float64, y, rows, cols int, h, s uint, mode PoolingMode, wg *sync.WaitGroup) {
-	newMat[y] = make([]float64, cols)
+func (m *Matrix) execPool(newMat [][]float32, y, rows, cols int, h, s uint, mode PoolingMode, wg *sync.WaitGroup) {
+	newMat[y] = make([]float32, cols)
 	for x := 0; x < cols; x++ {
 		switch mode {
 		case Max:
@@ -530,7 +530,7 @@ func (m *Matrix) execPool(newMat [][]float64, y, rows, cols int, h, s uint, mode
 func (m *Matrix) Pooling(h, s uint, mode PoolingMode) *Matrix {
 	rows := int((m.Rows-h)/s) + 1
 	cols := int((m.Cols-h)/s) + 1
-	newMat := make([][]float64, rows)
+	newMat := make([][]float32, rows)
 	var wg sync.WaitGroup
 	for y := 0; y < rows; y++ {
 		wg.Add(1)
@@ -540,8 +540,8 @@ func (m *Matrix) Pooling(h, s uint, mode PoolingMode) *Matrix {
 	return NewMatrix(newMat)
 }
 
-func (m *Matrix) t(newMat [][]float64, y int, wg *sync.WaitGroup) {
-	col := make([]float64, m.Rows)
+func (m *Matrix) t(newMat [][]float32, y int, wg *sync.WaitGroup) {
+	col := make([]float32, m.Rows)
 	for x := 0; x < int(m.Rows); x++ {
 		col[x] = m.M[x][y]
 	}
@@ -551,7 +551,7 @@ func (m *Matrix) t(newMat [][]float64, y int, wg *sync.WaitGroup) {
 
 // T transports the Matrix.
 func (m *Matrix) T() *Matrix {
-	newMat := make([][]float64, m.Cols)
+	newMat := make([][]float32, m.Cols)
 	var wg sync.WaitGroup
 	for y := 0; y < int(m.Cols); y++ {
 		wg.Add(1)
@@ -561,8 +561,8 @@ func (m *Matrix) T() *Matrix {
 	return NewMatrix(newMat)
 }
 
-func (m *Matrix) clip(newMat [][]float64, y int, start, end float64, wg *sync.WaitGroup) {
-	newMat[y] = make([]float64, m.Cols)
+func (m *Matrix) clip(newMat [][]float32, y int, start, end float32, wg *sync.WaitGroup) {
+	newMat[y] = make([]float32, m.Cols)
 	for x := 0; x < int(m.Cols); x++ {
 		e := m.M[y][x]
 		if e < start {
@@ -577,8 +577,8 @@ func (m *Matrix) clip(newMat [][]float64, y int, start, end float64, wg *sync.Wa
 }
 
 // Clip clips matrix.
-func (m *Matrix) Clip(start, end float64) *Matrix {
-	newMat := make([][]float64, m.Rows)
+func (m *Matrix) Clip(start, end float32) *Matrix {
+	newMat := make([][]float32, m.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(m.Rows); y++ {
 		wg.Add(1)
@@ -589,16 +589,16 @@ func (m *Matrix) Clip(start, end float64) *Matrix {
 }
 
 // SumVec calculates sum of the vector.
-func SumVec(v []float64) float64 {
-	sum := 0.0
+func SumVec(v []float32) float32 {
+	sum := float32(0.0)
 	for _, e := range v {
 		sum += e
 	}
 	return sum
 }
 
-func makeCol(m [][]float64, colSize, rs, re, cs, ce uint) []float64 {
-	col := make([]float64, colSize)
+func makeCol(m [][]float32, colSize, rs, re, cs, ce uint) []float32 {
+	col := make([]float32, colSize)
 	idx := 0
 	for y := rs; y < re; y++ {
 		for x := cs; x < ce; x++ {
@@ -612,7 +612,7 @@ func makeCol(m [][]float64, colSize, rs, re, cs, ce uint) []float64 {
 // Im2Col make clumns matrix from matrix.
 func (m *Matrix) Im2Col(kernelSize, stride uint) *Matrix {
 	colSize := kernelSize * kernelSize
-	var res [][]float64
+	var res [][]float32
 	for y := 0; y < int(m.Rows-kernelSize+1); y += int(stride) {
 		for x := 0; x < int(m.Cols-kernelSize+1); x += int(stride) {
 			res = append(res, makeCol(m.M, colSize, uint(y), uint(y)+kernelSize, uint(x), uint(x)+kernelSize))
