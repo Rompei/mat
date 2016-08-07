@@ -232,7 +232,7 @@ func ElemAdd(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float32, a.Cols)
+	res := make([][]float32, a.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
@@ -249,7 +249,7 @@ func ElemSub(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float32, a.Cols)
+	res := make([][]float32, a.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
@@ -266,7 +266,7 @@ func ElemMul(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float32, a.Cols)
+	res := make([][]float32, a.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
@@ -283,7 +283,7 @@ func ElemDiv(a, b *Matrix) (*Matrix, error) {
 	if a.Rows != b.Rows || a.Cols != b.Cols {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float32, a.Cols)
+	res := make([][]float32, a.Rows)
 	var wg sync.WaitGroup
 	for y := 0; y < int(a.Rows); y++ {
 		wg.Add(1)
