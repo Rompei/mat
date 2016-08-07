@@ -193,7 +193,7 @@ func Sub(a, b *Matrix) (*Matrix, error) {
 }
 
 func execMul(newMat [][]float32, i int, a, b *Matrix, wg *sync.WaitGroup) {
-	newMat[i] = make([]float32, a.Cols)
+	newMat[i] = make([]float32, b.Cols)
 	for j := 0; j < int(b.Cols); j++ {
 		partial := float32(0.0)
 		for k := 0; k < int(b.Rows); k++ {
@@ -209,7 +209,7 @@ func Mul(a, b *Matrix) (*Matrix, error) {
 	if a.Cols != b.Rows {
 		return nil, errors.New("Size was wrong")
 	}
-	res := make([][]float32, a.Cols)
+	res := make([][]float32, a.Rows)
 	var wg sync.WaitGroup
 	for i := 0; i < int(a.Rows); i++ {
 		wg.Add(1)

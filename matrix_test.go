@@ -100,6 +100,32 @@ func TestMul(t *testing.T) {
 	}
 }
 
+func TestMul2(t *testing.T) {
+	m1 := NewMatrix([][]float32{
+		{2, 3},
+		{1, 4},
+		{2, 1},
+	})
+	m2 := NewMatrix([][]float32{
+		{3, 1, 2},
+		{2, 4, 2},
+	})
+	res, err := Mul(m1, m2)
+	if err != nil {
+		t.Error(err)
+	}
+	a := NewMatrix([][]float32{
+		{12, 14, 10},
+		{11, 17, 10},
+		{8, 6, 6},
+	})
+	if !res.Equals(a) {
+		t.Error("not same")
+		res.Show()
+		a.Show()
+	}
+}
+
 func TestElemAdd(t *testing.T) {
 	m1 := NewMatrix(s1)
 	m2 := NewMatrix(s2)
