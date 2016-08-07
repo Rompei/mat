@@ -597,11 +597,11 @@ func SumVec(v []float32) float32 {
 	return sum
 }
 
-func makeCol(m [][]float32, colSize, rs, re, cs, ce uint) []float32 {
+func makeCol(m [][]float32, colSize, rs, cs, kernelSize uint) []float32 {
 	col := make([]float32, colSize)
 	idx := 0
-	for y := rs; y < re; y++ {
-		for x := cs; x < ce; x++ {
+	for y := rs; y < rs+kernelSize; y++ {
+		for x := cs; x < cs+kernelSize; x++ {
 			col[idx] = m[y][x]
 			idx++
 		}
@@ -615,7 +615,7 @@ func (m *Matrix) Im2Col(kernelSize, stride uint) *Matrix {
 	var res [][]float32
 	for y := 0; y < int(m.Rows-kernelSize+1); y += int(stride) {
 		for x := 0; x < int(m.Cols-kernelSize+1); x += int(stride) {
-			res = append(res, makeCol(m.M, colSize, uint(y), uint(y)+kernelSize, uint(x), uint(x)+kernelSize))
+			res = append(res, makeCol(m.M, colSize, uint(y), uint(x), kernelSize))
 		}
 	}
 	return NewMatrix(res)
