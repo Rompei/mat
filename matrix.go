@@ -528,8 +528,8 @@ func (m *Matrix) execPool(newMat [][]float32, y, rows, cols int, h, s uint, mode
 
 // Pooling calculate pooling.
 func (m *Matrix) Pooling(h, s uint, mode PoolingMode) *Matrix {
-	rows := int(float64(m.Rows-h)/float64(s)) + 1.0
-	cols := int(float64(m.Cols-h)/float64(s)) + 1.0
+	rows := int(float64(m.Rows-h)/float64(s)) + 1
+	cols := int(float64(m.Cols-h)/float64(s)) + 1
 	newMat := make([][]float32, rows)
 	var wg sync.WaitGroup
 	for y := 0; y < rows; y++ {
