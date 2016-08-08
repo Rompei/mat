@@ -439,6 +439,13 @@ func TestPooling(t *testing.T) {
 	}
 }
 
+func TestPooling2(t *testing.T) {
+	m := Random(8, 8)
+	t.Log(m)
+	res := m.Pooling(3, 3, Max)
+	t.Log(res)
+}
+
 func TestT(t *testing.T) {
 	m1 := NewMatrix([][]float32{
 		{1, 2, 3},

@@ -3,6 +3,7 @@ package mat
 import (
 	"errors"
 	"fmt"
+	"math"
 	"math/rand"
 	"sync"
 	"time"
@@ -528,8 +529,14 @@ func (m *Matrix) execPool(newMat [][]float32, y, rows, cols int, h, s uint, mode
 
 // Pooling calculate pooling.
 func (m *Matrix) Pooling(h, s uint, mode PoolingMode) *Matrix {
-	rows := int(float64(m.Rows-h)/float64(s)) + 1
-	cols := int(float64(m.Cols-h)/float64(s)) + 1
+	rows := int(math.Ceil(float64(m.Rows-h)/float64(s))) + 1
+	cols := int(math.Ceil(float64(m.Cols-h)/float64(s))) + 1
+	if (m.Rows-h)%s != 0 {
+		padded := NewMatrix(m.M).Pad(1, Zero)
+		m.M = padded.M
+		m.Rows = uint(len(m.M))
+		m.Cols = uint(len(m.M[0]))
+	}
 	newMat := make([][]float32, rows)
 	var wg sync.WaitGroup
 	for y := 0; y < rows; y++ {
